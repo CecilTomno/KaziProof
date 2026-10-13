@@ -23,12 +23,9 @@ button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 input, select, textarea { color: var(--ink); }
 .app-frame { max-width: 1420px; margin: 0 auto; padding: 0 48px 25px; }
-.topbar { height: 72px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); }
-.brand { display: inline-flex; gap: 10px; align-items: center; color: inherit; text-decoration: none; }
-.brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 11px; color: #fff; background: var(--forest); }
-.brand-mark svg { width: 21px; height: 21px; }
-.brand-copy strong { display: block; font-size: 14px; letter-spacing: -.035em; }
-.brand-copy small { display: block; margin-top: 3px; color: #617980; font-size: 8px; letter-spacing: .16em; font-weight: 700; }
+.topbar { height: 84px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); background: #fff; }
+.brand { display: inline-flex; align-items: center; color: inherit; text-decoration: none; }
+.brand-logo { display: block; width: 112px; height: 78px; object-fit: contain; }
 .top-actions { display: flex; align-items: center; gap: 13px; }
 .network-badge { display: flex; align-items: center; gap: 7px; color: #76817e; font-size: 10px; }
 .network-badge i, .live-mark, .ribbon-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #70aa84; }
@@ -204,7 +201,8 @@ h1 em { color: #527268; font-weight: 500; }
 }
 @media (max-width: 520px) {
   .app-frame { padding: 0 11px 18px; }
-  .topbar { height: 62px; }
+  .topbar { height: 72px; }
+  .brand-logo { width: 100px; height: 68px; }
   .network-badge { font-size: 0; gap: 0; }
   .network-badge i { width: 8px; height: 8px; }
   .top-actions { gap: 8px; }
