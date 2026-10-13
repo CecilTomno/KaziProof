@@ -98,10 +98,13 @@
       const skip = document.getElementById("introSkip");
       const app = document.querySelector(".app-frame");
       const seenKey = "kaziproof-intro-seen-v1";
+      const playbackRate = 0.8;
+      const endCardHoldMs = 1800;
       const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
       let seen = false;
       let dismissed = false;
       let safetyTimer;
+      let endCardTimer;
 
       try {
         seen = window.localStorage.getItem(seenKey) === "1";
@@ -121,6 +124,7 @@
         if (dismissed) return;
         dismissed = true;
         window.clearTimeout(safetyTimer);
+        window.clearTimeout(endCardTimer);
         rememberIntro();
         video.pause();
         app.inert = false;
@@ -152,7 +156,9 @@
       app.setAttribute("aria-hidden", "true");
       skip.focus({ preventScroll: true });
       skip.addEventListener("click", () => dismissIntro());
-      video.addEventListener("ended", () => dismissIntro());
+      video.addEventListener("ended", () => {
+        endCardTimer = window.setTimeout(() => dismissIntro(), endCardHoldMs);
+      });
       video.addEventListener("error", () => dismissIntro(true));
       video.addEventListener("abort", () => dismissIntro(true));
       videoSource.addEventListener("error", () => dismissIntro(true));
@@ -160,7 +166,7 @@
       const armSafetyTimer = () => {
         window.clearTimeout(safetyTimer);
         const durationMs = Number.isFinite(video.duration) && video.duration > 0
-          ? video.duration * 1000 + 10000
+          ? video.duration / playbackRate * 1000 + endCardHoldMs + 10000
           : 12000;
         safetyTimer = window.setTimeout(() => dismissIntro(true), Math.min(Math.max(durationMs, 12000), 30000));
       };
@@ -170,6 +176,7 @@
       try {
         video.autoplay = true;
         video.preload = "auto";
+        video.playbackRate = playbackRate;
         const playRequest = video.play();
         if (playRequest && typeof playRequest.catch === "function") {
           playRequest.catch(() => dismissIntro(true));
