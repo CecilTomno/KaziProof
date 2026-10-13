@@ -1,0 +1,12 @@
+{
+  "name": "KaziProof Field Work",
+  "short_name": "KaziProof",
+  "description": "Offline-first field workflow prototype for cleaning and facilities teams.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f3f8fa",
+  "theme_color": "#f3f8fa",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

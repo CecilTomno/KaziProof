@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f3f8fa">
+  <meta name="description" content="KaziProof helps Kenyan field-service teams schedule work and capture proof of service.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles.css">
+  <title>KaziProof — field work, accounted for</title>
+</head>
+<body>
+  <div class="app-frame">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="KaziProof home">
+        <span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M7 4v16M18 4 7 12l11 8" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        <span class="brand-copy"><strong>KaziProof</strong><small>FIELD WORK, ACCOUNTED FOR</small></span>
+      </a>
+      <div class="top-actions">
+        <span id="networkBadge" class="network-badge"><i></i><span>Checking connection</span></span>
+        <button id="syncButton" class="button button-soft" type="button" title="Sync queued work with the local demo server">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M16.4 7.2A6.7 6.7 0 0 0 4.8 5.3L3.5 7M3.5 7V3.8M3.5 7h3.3M3.6 12.8a6.7 6.7 0 0 0 11.6 1.9l1.3-1.7m0 0v3.2m0-3.2h-3.2" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span>Sync</span><b id="pendingCount" class="count-pill">0</b>
+        </button>
+        <button id="menuButton" class="mobile-menu" type="button" aria-label="Open workspace menu">☰</button>
+      </div>
+    </header>
+
+    <div class="demo-ribbon"><span class="ribbon-dot"></span><span><strong>Local prototype</strong> · Sample company and jobs · Do not enter real customer or staff data</span><button id="offlineToggle" type="button" class="offline-toggle">Simulate offline</button></div>
+
+    <nav class="view-tabs" aria-label="Workspace view">
+      <button class="view-tab active" type="button" data-view="office"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="2.8" y="3" width="14.4" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/><path d="M6.3 6.6h7.4M6.3 9.8h7.4M6.3 13h4.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Office</button>
+      <button class="view-tab" type="button" data-view="worker"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="6.1" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M4.2 17c.5-3.3 2.4-5 5.8-5s5.3 1.7 5.8 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Worker app <span id="workerPendingTag" class="tab-count" hidden>0</span></button>
+    </nav>
+
+    <main>
+      <section id="officeView" class="view-section">
+        <div class="page-heading">
+          <div><div class="eyebrow"><span class="eyebrow-line"></span> <span id="tenantName">KAZIPROOF DEMO</span> · OPERATIONS</div><h1>Today's work, <em>in one place.</em></h1><p>Assign the visit. Get clear proof when the crew is done.</p></div>
+          <div class="today-chip"><span class="today-icon">◷</span><span id="todayLabel">Today</span></div>
+        </div>
+
+        <div class="metric-row">
+          <article class="metric-card"><div class="metric-top"><span>Scheduled visits</span><span class="metric-icon green">▤</span></div><strong id="metricScheduled">—</strong><small>Across your team today</small></article>
+          <article class="metric-card"><div class="metric-top"><span>Completed</span><span class="metric-icon blue">✓</span></div><strong id="metricCompleted">—</strong><small>With a worker update</small></article>
+          <article class="metric-card"><div class="metric-top"><span>Needs attention</span><span class="metric-icon amber">!</span></div><strong id="metricAttention">—</strong><small>Pending sync or review</small></article>
+        </div>
+
+        <div class="office-grid">
+          <section class="panel create-panel">
+            <div class="panel-heading"><div><span class="section-kicker">DISPATCH</span><h2>Create a job</h2><p>Start with the essentials. Assign a crew member.</p></div><span class="panel-step">01</span></div>
+            <form id="createJobForm" class="job-form">
+              <label class="field"><span>Client or company</span><input name="client_name" required maxlength="120" placeholder="e.g. Mwangaza Offices"></label>
+              <label class="field"><span>Service site</span><input name="site_name" required maxlength="160" placeholder="Building, floor or area"></label>
+              <label class="field"><span>Job type</span><input name="service_type" required maxlength="100" placeholder="e.g. Washroom deep clean"></label>
+              <div class="form-row"><label class="field"><span>Visit date</span><input name="scheduled_for" type="date" required></label><label class="field"><span>Assign to</span><select id="assignWorker" name="assigned_worker_id" required></select></label></div>
+              <button id="createJobButton" class="button button-primary full-width" type="submit"><span>Create and assign job</span><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+              <p class="form-footnote"><span class="tiny-lock">▣</span> New jobs need a connection in this demo.</p>
+            </form>
+          </section>
+
+          <section class="panel jobs-panel">
+            <div class="panel-heading list-heading"><div><span class="section-kicker">LIVE JOB BOARD</span><h2>Team schedule</h2><p>Jobs, assignments and the latest field update.</p></div><button id="refreshButton" class="icon-button" type="button" aria-label="Refresh schedule" title="Refresh schedule"><svg viewBox="0 0 20 20" fill="none"><path d="M16.4 7.2A6.7 6.7 0 0 0 4.8 5.3L3.5 7M3.5 7V3.8M3.5 7h3.3M3.6 12.8a6.7 6.7 0 0 0 11.6 1.9l1.3-1.7m0 0v3.2m0-3.2h-3.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button></div>
+            <div class="job-list-head"><span>CLIENT / SITE</span><span>ASSIGNED TO</span><span>STATUS</span></div>
+            <div id="officeJobs" class="office-jobs"><div class="loading-row"><span class="spinner"></span>Loading the team schedule…</div></div>
+            <div class="panel-bottom"><span class="live-mark"></span> Updates are stored on this demo server</div>
+          </section>
+        </div>
+      </section>
+
+      <section id="workerView" class="view-section worker-view" hidden>
+        <div class="worker-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> FIELD APP · WORKER VIEW</div><h1>Your jobs. <em>Simple as that.</em></h1><p>Open the visit, complete the checklist and save your proof.</p></div><label class="worker-picker"><span>Working as</span><select id="workerSelect" aria-label="Choose a demo worker"></select></label></div>
+        <div id="offlineNotice" class="offline-notice" hidden><span class="offline-notice-icon">↯</span><div><strong>You're working offline</strong><span>Your job and proof will stay on this phone and queue until you reconnect.</span></div><span class="queue-indicator"><i></i> QUEUED LOCALLY</span></div>
+        <div class="worker-layout">
+          <section class="panel route-panel"><div class="panel-heading"><div><span class="section-kicker">MY ROUTE</span><h2>Assigned visits</h2><p id="workerDateLabel">For today</p></div><span class="route-count" id="workerJobCount">0</span></div><div id="workerJobs" class="worker-jobs"><div class="empty-state">No visits assigned yet.</div></div></section>
+          <section id="jobDetail" class="panel detail-panel"><div class="empty-detail"><div class="empty-illustration"><svg viewBox="0 0 64 64" fill="none"><rect x="11" y="9" width="42" height="48" rx="6" stroke="currentColor" stroke-width="1.7"/><path d="M21 23h22M21 32h22M21 41h12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="m40 45 4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><h2>Pick a visit to get started</h2><p>Your assigned jobs will show here. You can open a job even if your connection drops.</p></div></section>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer"><span>KAZIPROOF · LOCAL WORKFLOW DEMO</span><span>Proof first. Paperwork follows.</span></footer>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="/app.js" defer></script>
+</body>
+</html>
