@@ -11,6 +11,14 @@
   <title>KaziProof — field work, accounted for</title>
 </head>
 <body>
+  <section id="introSplash" class="intro-splash" role="dialog" aria-modal="true" aria-label="KaziProof introduction">
+    <video id="introVideo" class="intro-video" muted playsinline webkit-playsinline preload="none" poster="/kaziproof-logo.png" aria-hidden="true">
+      <source src="/kaziproof-intro.mp4" type="video/mp4">
+    </video>
+    <button id="introSkip" class="intro-skip" type="button" aria-label="Skip introduction">Skip</button>
+  </section>
+  <noscript><style>.intro-splash { display: none !important; }</style></noscript>
+
   <div class="app-frame">
     <header class="topbar">
       <a class="brand" href="/" aria-label="KaziProof home">
@@ -82,6 +90,104 @@
   </div>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script>
+    (() => {
+      const splash = document.getElementById("introSplash");
+      const video = document.getElementById("introVideo");
+      const videoSource = video.querySelector("source");
+      const skip = document.getElementById("introSkip");
+      const app = document.querySelector(".app-frame");
+      const seenKey = "kaziproof-intro-seen-v1";
+      const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let seen = false;
+      let dismissed = false;
+      let safetyTimer;
+
+      try {
+        seen = window.localStorage.getItem(seenKey) === "1";
+      } catch {
+        // Continue with an in-memory one-time intro if storage is unavailable.
+      }
+
+      const rememberIntro = () => {
+        try {
+          window.localStorage.setItem(seenKey, "1");
+        } catch {
+          // The app still works when browser storage is restricted.
+        }
+      };
+
+      const dismissIntro = (immediate = false) => {
+        if (dismissed) return;
+        dismissed = true;
+        window.clearTimeout(safetyTimer);
+        rememberIntro();
+        video.pause();
+        app.inert = false;
+        app.removeAttribute("aria-hidden");
+        skip.blur();
+        splash.setAttribute("aria-hidden", "true");
+        splash.classList.add("is-leaving");
+
+        if (immediate || motionPreference.matches) {
+          splash.hidden = true;
+          return;
+        }
+
+        const hideSplash = () => { splash.hidden = true; };
+        splash.addEventListener("transitionend", event => {
+          if (event.target === splash) hideSplash();
+        }, { once: true });
+        window.setTimeout(hideSplash, 600);
+      };
+
+      if (seen || motionPreference.matches) {
+        rememberIntro();
+        splash.hidden = true;
+        return;
+      }
+
+      rememberIntro();
+      app.inert = true;
+      app.setAttribute("aria-hidden", "true");
+      skip.focus({ preventScroll: true });
+      skip.addEventListener("click", () => dismissIntro());
+      video.addEventListener("ended", () => dismissIntro());
+      video.addEventListener("error", () => dismissIntro(true));
+      video.addEventListener("abort", () => dismissIntro(true));
+      videoSource.addEventListener("error", () => dismissIntro(true));
+
+      const armSafetyTimer = () => {
+        window.clearTimeout(safetyTimer);
+        const durationMs = Number.isFinite(video.duration) && video.duration > 0
+          ? video.duration * 1000 + 10000
+          : 12000;
+        safetyTimer = window.setTimeout(() => dismissIntro(true), Math.min(Math.max(durationMs, 12000), 30000));
+      };
+      video.addEventListener("loadedmetadata", armSafetyTimer);
+      armSafetyTimer();
+
+      try {
+        video.autoplay = true;
+        video.preload = "auto";
+        const playRequest = video.play();
+        if (playRequest && typeof playRequest.catch === "function") {
+          playRequest.catch(() => dismissIntro(true));
+        }
+      } catch {
+        dismissIntro(true);
+      }
+
+      const handleMotionChange = event => {
+        if (event.matches) dismissIntro(true);
+      };
+      if (typeof motionPreference.addEventListener === "function") {
+        motionPreference.addEventListener("change", handleMotionChange);
+      } else if (typeof motionPreference.addListener === "function") {
+        motionPreference.addListener(handleMotionChange);
+      }
+    })();
+  </script>
   <script src="/app.js" defer></script>
 </body>
 </html>
